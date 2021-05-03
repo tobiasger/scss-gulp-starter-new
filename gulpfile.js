@@ -4,6 +4,7 @@ const del = require('del');
 var gulp_concat = require('gulp-concat');
 var gulp_rename = require('gulp-rename');
 var gulp_uglify = require('gulp-uglify');
+var browserSync = require('browser-sync').create();
 const autoprefixer = require('gulp-autoprefixer');
 const cleanCSS = require('gulp-clean-css');
 var uglify = require('gulp-uglify');
@@ -20,7 +21,8 @@ gulp.task('css-uglify', () => {
     .pipe(autoprefixer({
         cascade: false}))
     .pipe(cleanCSS({compatibility: 'ie8'}))
-    .pipe(gulp.dest('./css'));
+    .pipe(gulp.dest('./css'))
+    .pipe(browserSync.stream());
 })
 
 gulp.task('js-uglify', function(){
@@ -29,7 +31,8 @@ gulp.task('js-uglify', function(){
         .pipe(gulp.dest('./js/temp/')) //this will save concat.js in a temp directory defined above
         .pipe(gulp_rename('app.js')) //this will rename concat.js to app.js
         .pipe(gulp_uglify()) //this will uglify/minify app.js
-        .pipe(gulp.dest('./js/')); //this will save app.js into destination Directory defined above
+        .pipe(gulp.dest('./js/')) //this will save app.js into destination Directory defined above
+        .pipe(browserSync.stream());
 });
 
 gulp.task('clean', () => {
@@ -47,10 +50,17 @@ gulp.task('remove-js-temp', () => {
 gulp.task('default', gulp.series(['clean', 'styles', 'css-uglify', 'js-uglify']));
 
 gulp.task('watch', () => {
+    browserSync.init({
+        port: 8080,
+        server: {
+            baseDir: "./"
+        }
+    });
     gulp.watch('src/sass/**/*.scss', (done) => {
         gulp.series(['clean', 'styles', 'css-uglify'])(done);
     });
     gulp.watch('src/js/**/*.js', (done) => {
         gulp.series(['js-uglify', 'remove-js-temp'])(done);
     });
+    gulp.watch("./*.html").on('change', browserSync.reload);
 });
